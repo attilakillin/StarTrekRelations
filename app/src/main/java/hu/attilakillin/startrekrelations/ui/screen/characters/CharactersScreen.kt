@@ -1,4 +1,10 @@
 package hu.attilakillin.startrekrelations.ui.screen.characters
 
-fun CharactersScreen() {
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+
+@Composable
+fun CharactersScreen(
+    modifier: Modifier = Modifier
+) {
 }

@@ -1,4 +1,10 @@
 package hu.attilakillin.startrekrelations.ui.screen.details
 
-fun DetailsScreen() {
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+
+@Composable
+fun DetailsScreen(
+    modifier: Modifier = Modifier
+) {
 }
