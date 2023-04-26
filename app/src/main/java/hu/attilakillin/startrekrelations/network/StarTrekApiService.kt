@@ -1,9 +1,25 @@
 package hu.attilakillin.startrekrelations.network
 
-interface StarTrekApiService {
-    suspend fun searchCharacters(query: String)
+import kotlinx.coroutines.flow.Flow
+import retrofit2.http.Field
+import retrofit2.http.FormUrlEncoded
+import retrofit2.http.GET
+import retrofit2.http.POST
+import retrofit2.http.Query
 
-    suspend fun getCharacterDetails(uid: String)
+interface StarTrekApiService {
+    @FormUrlEncoded
+    @POST("/character/search")
+    suspend fun searchCharacters(
+        @Field("name") name: String,
+        @Query("pageNumber") pageNumber: Int = 0,
+        @Query("pageSize") pageSize: Int = 50
+    ): Flow<CharacterFullResponse>
+
+    @GET("/character")
+    suspend fun getCharacterDetails(
+        @Query("uid") uid: String
+    ): Flow<CharacterBaseResponse>
 
     companion object {
         const val API_URL = "https://stapi.co/api/v1/rest"
