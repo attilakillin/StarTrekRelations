@@ -26,7 +26,11 @@ class CharacterRepository @Inject constructor(
         name: String,
         pageNumber: Int
     ): PagedList<Character> = withContext(Dispatchers.IO) {
-        service.searchCharacters(name = name, pageNumber = pageNumber).toModel()
+        try {
+            service.searchCharacters(name = name, pageNumber = pageNumber).toModel()
+        } catch (ex: Exception) {
+            PagedList(content = listOf(), pageNumber = 0, firstPage = true, lastPage = true)
+        }
     }
 
     fun loadDetails(uid: String) = flow<CharacterWithRelations> {
