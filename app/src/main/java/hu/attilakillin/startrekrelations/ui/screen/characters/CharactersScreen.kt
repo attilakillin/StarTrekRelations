@@ -30,7 +30,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import hu.attilakillin.startrekrelations.network.CharacterBase
+import hu.attilakillin.startrekrelations.model.Character
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,6 +38,7 @@ fun CharactersScreen(
     charactersViewModel: CharactersViewModel = viewModel()
 ) {
     /* Character list - the main state displayed on the screen. */
+    val favorites = charactersViewModel.favorites.observeAsState()
     val characters = charactersViewModel.characters.observeAsState()
 
     /* Focus manager - to remove editor focus when clicking search button. */
@@ -48,7 +49,7 @@ fun CharactersScreen(
 
     /* Immediately search characters when view is launched. */
     LaunchedEffect(key1 = Unit) {
-        charactersViewModel.searchCharacters("")
+        charactersViewModel.searchAll("")
     }
 
     /* Main view structure. */
@@ -76,7 +77,7 @@ fun CharactersScreen(
                 Button(
                     onClick = {
                         focusManager.clearFocus()
-                        charactersViewModel.searchCharacters(searchQuery.value)
+                        charactersViewModel.searchAll(searchQuery.value)
                     },
                     shape = RoundedCornerShape(4.dp),
                     modifier = Modifier
@@ -97,15 +98,11 @@ fun CharactersScreen(
                     Text(text = "Favorites")
                 }
 
-                item {
-                    Row(
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(80.dp)
-                    ) {
-                        Text(text = "No favorites yet...", fontStyle = FontStyle.Italic)
+                if (favorites.value.isNullOrEmpty()) {
+                    item { PaddedText(text = "No favorites yet...") }
+                } else {
+                    items(favorites.value ?: listOf()) {
+                        CharacterCard(character = it)
                     }
                 }
 
@@ -113,13 +110,17 @@ fun CharactersScreen(
                     Text(text = "Results")
                 }
 
-                items(characters.value ?: listOf()) {
-                    CharacterCard(character = it)
-                }
+                if (characters.value?.content.isNullOrEmpty()) {
+                    item { PaddedText(text = "No results...") }
+                } else {
+                    items(characters.value?.content ?: listOf()) {
+                        CharacterCard(character = it)
+                    }
 
-                item {
-                    LaunchedEffect(key1 = true) {
-                        charactersViewModel.searchMoreCharacters()
+                    item {
+                        LaunchedEffect(key1 = true) {
+                            charactersViewModel.searchMoreCharacters()
+                        }
                     }
                 }
             }
@@ -129,7 +130,7 @@ fun CharactersScreen(
 
 @Composable
 fun CharacterCard(
-    character: CharacterBase
+    character: Character
 ) {
     Card(
         shape = RoundedCornerShape(4.dp),
@@ -151,5 +152,20 @@ fun CharacterCard(
 
             Text("F")
         }
+    }
+}
+
+@Composable
+fun PaddedText(
+    text: String
+) {
+    Row(
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(80.dp)
+    ) {
+        Text(text = text, fontStyle = FontStyle.Italic)
     }
 }

@@ -1,6 +1,5 @@
 package hu.attilakillin.startrekrelations.network
 
-import kotlinx.coroutines.flow.Flow
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
