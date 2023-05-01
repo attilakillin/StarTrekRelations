@@ -1,5 +1,6 @@
 package hu.attilakillin.startrekrelations.ui.screen.characters
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,8 +18,10 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.livedata.observeAsState
@@ -25,12 +29,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import hu.attilakillin.startrekrelations.R
 import hu.attilakillin.startrekrelations.model.Character
+import java.util.concurrent.CancellationException
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -102,7 +110,7 @@ fun CharactersScreen(
                     item { PaddedText(text = "No favorites yet...") }
                 } else {
                     items(favorites.value ?: listOf()) {
-                        CharacterCard(character = it)
+                        CharacterCard(character = it, charactersViewModel = charactersViewModel)
                     }
                 }
 
@@ -114,7 +122,7 @@ fun CharactersScreen(
                     item { PaddedText(text = "No results...") }
                 } else {
                     items(characters.value?.content ?: listOf()) {
-                        CharacterCard(character = it)
+                        CharacterCard(character = it, charactersViewModel = charactersViewModel)
                     }
 
                     item {
@@ -130,8 +138,11 @@ fun CharactersScreen(
 
 @Composable
 fun CharacterCard(
-    character: Character
+    character: Character,
+    charactersViewModel: CharactersViewModel
 ) {
+    val context = LocalContext.current
+
     Card(
         shape = RoundedCornerShape(4.dp),
         modifier = Modifier
@@ -141,7 +152,7 @@ fun CharacterCard(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxHeight()
-                .padding(horizontal = 20.dp, vertical = 8.dp)
+                .padding(start = 20.dp, top = 8.dp, bottom = 8.dp, end = 5.dp)
         ) {
             Text(
                 text = character.name,
@@ -150,7 +161,39 @@ fun CharacterCard(
                     .weight(1.0f)
             )
 
-            Text("F")
+            if (character.isFavorite) {
+                TextButton(
+                    onClick = { charactersViewModel.removeFromFavorites(character.uid) }
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.star_full),
+                        contentDescription = "Remove from favorites",
+                        modifier = Modifier.height(32.dp).width(32.dp)
+                    )
+                }
+            } else {
+                TextButton(
+                    onClick = {
+                        charactersViewModel
+                            .addToFavorites(character.uid)
+                            .invokeOnCompletion {
+                                if (it is CancellationException) {
+                                    Toast.makeText(
+                                        context,
+                                        "Unable to add to favorites! Check your internet connection!",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
+                    }
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.star_empty),
+                        contentDescription = "Add to favorites",
+                        modifier = Modifier.height(32.dp).width(32.dp)
+                    )
+                }
+            }
         }
     }
 }
