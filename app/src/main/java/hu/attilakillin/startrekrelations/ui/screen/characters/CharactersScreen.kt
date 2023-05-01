@@ -35,6 +35,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import hu.attilakillin.startrekrelations.R
 import hu.attilakillin.startrekrelations.model.Character
@@ -43,7 +44,8 @@ import java.util.concurrent.CancellationException
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CharactersScreen(
-    charactersViewModel: CharactersViewModel = viewModel()
+    charactersViewModel: CharactersViewModel = hiltViewModel(),
+    onDetailsClick: (String) -> Unit
 ) {
     /* Character list - the main state displayed on the screen. */
     val favorites = charactersViewModel.favorites.observeAsState()
@@ -110,7 +112,13 @@ fun CharactersScreen(
                     item { PaddedText(text = "No favorites yet...") }
                 } else {
                     items(favorites.value ?: listOf()) {
-                        CharacterCard(character = it, charactersViewModel = charactersViewModel)
+                        CharacterCard(
+                            character = it,
+                            charactersViewModel = charactersViewModel,
+                            onCardClick = {
+                                onDetailsClick(it.uid)
+                            }
+                        )
                     }
                 }
 
@@ -122,7 +130,13 @@ fun CharactersScreen(
                     item { PaddedText(text = "No results...") }
                 } else {
                     items(characters.value?.content ?: listOf()) {
-                        CharacterCard(character = it, charactersViewModel = charactersViewModel)
+                        CharacterCard(
+                            character = it,
+                            charactersViewModel = charactersViewModel,
+                            onCardClick = {
+                                onDetailsClick(it.uid)
+                            }
+                        )
                     }
 
                     item {
@@ -136,15 +150,18 @@ fun CharactersScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CharacterCard(
     character: Character,
+    onCardClick: () -> Unit,
     charactersViewModel: CharactersViewModel
 ) {
     val context = LocalContext.current
 
     Card(
         shape = RoundedCornerShape(4.dp),
+        onClick = onCardClick,
         modifier = Modifier
             .height(80.dp)
     ) {
