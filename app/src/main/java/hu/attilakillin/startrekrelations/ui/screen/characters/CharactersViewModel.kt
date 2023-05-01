@@ -8,6 +8,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import hu.attilakillin.startrekrelations.model.Character
 import hu.attilakillin.startrekrelations.model.PagedList
 import hu.attilakillin.startrekrelations.repository.CharacterRepository
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -22,12 +23,13 @@ class CharactersViewModel @Inject constructor(
     private var _favorites = MutableLiveData<List<Character>>()
     val favorites: LiveData<List<Character>> get() = _favorites
 
-
+    /* Search both the favorites and the general characters list. */
     fun searchAll(query: String = "") {
         searchFavorites(query)
         searchCharacters(query)
     }
 
+    /* Searches favorites with the given nam query. */
     fun searchFavorites(query: String = "") = viewModelScope.launch {
         _favorites.value = repository.searchFavorites(query)
     }
@@ -54,5 +56,26 @@ class CharactersViewModel @Inject constructor(
             firstPage = response.firstPage,
             lastPage = response.lastPage
         )
+    }
+
+    fun addToFavorites(uid: String) = viewModelScope.launch {
+        val success = repository.addToFavorites(uid)
+        if (success) {
+            updateOneFavorite(uid, true)
+        } else {
+            this.cancel()
+        }
+    }
+
+    fun removeFromFavorites(uid: String) = viewModelScope.launch {
+        repository.removeFromFavorites(uid)
+        updateOneFavorite(uid, false)
+    }
+
+    private fun updateOneFavorite(uid: String, favorite: Boolean) {
+        searchFavorites(lastQuery)
+        _characters.value = _characters.value?.also { list ->
+            list.content.find { it.uid == uid }?.isFavorite = favorite
+        }
     }
 }
