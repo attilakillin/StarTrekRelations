@@ -3,6 +3,7 @@ package hu.attilakillin.startrekrelations.persistence
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import hu.attilakillin.startrekrelations.model.CharacterReference
 
@@ -31,8 +32,9 @@ data class Character(
         parentColumns = ["uid"],
         childColumns = ["sourceUid"],
         onDelete = ForeignKey.CASCADE
-    )
-])
+    )],
+    indices = [Index(value = ["sourceUid"])]
+)
 data class Relation(
     @PrimaryKey(autoGenerate = true)
     val id: Long,
