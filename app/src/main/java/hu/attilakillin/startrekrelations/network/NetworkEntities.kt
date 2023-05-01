@@ -70,7 +70,7 @@ data class CharacterSpecies(
 data class CharacterRelation(
     val type: String,
     val source: CharacterHeader,
-    val target: CharacterHeader
+    var target: CharacterHeader
 )
 
 @Serializable
@@ -110,7 +110,10 @@ fun CharacterFull.toModel(): Character = Character(
     weight = weight,
     height = height,
 
-    relations = characterRelations.map { it.toModel() }
+    relations = characterRelations
+        .filter { it.target.uid != uid }
+        .map { it.toModel() }
+        .sortedWith(compareBy({ it.qualifier }, { it.target.name }))
 )
 
 fun CharacterRelation.toModel(): Relation = Relation(

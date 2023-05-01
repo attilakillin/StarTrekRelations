@@ -40,11 +40,21 @@ class MainActivity : ComponentActivity() {
 
                         composable("details/{uid}") { entry ->
                             DetailsScreen(
-                                characterUid = entry.arguments?.getString("uid") ?: ""
+                                characterUid = entry.arguments?.getString("uid") ?: "",
+                                onNavigateBackClick = {
+                                    nav.navigateUp()
+                                },
+                                onRelationClick = { uid ->
+                                    nav.navigate("details/$uid")
+                                },
+                                onNavigateRootClick = {
+                                    nav.navigate("home") {
+                                        popUpTo("home") { inclusive = true }
+                                    }
+                                }
                             )
                         }
                     }
-
                 }
             }
         }
