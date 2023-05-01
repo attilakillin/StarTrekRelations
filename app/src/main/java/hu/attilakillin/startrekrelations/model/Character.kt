@@ -11,5 +11,7 @@ data class Character(
     val weight: Int? = null,
     val height: Int? = null,
 
-    val relations: List<Relation> = listOf()
+    val relations: List<Relation> = listOf(),
+
+    val isFavorite: Boolean = false
 )

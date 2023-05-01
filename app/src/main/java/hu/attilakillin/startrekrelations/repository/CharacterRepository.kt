@@ -2,13 +2,12 @@ package hu.attilakillin.startrekrelations.repository
 
 import hu.attilakillin.startrekrelations.model.Character
 import hu.attilakillin.startrekrelations.model.PagedList
-import hu.attilakillin.startrekrelations.persistence.CharacterWithRelations
 import hu.attilakillin.startrekrelations.network.StarTrekApiService
 import hu.attilakillin.startrekrelations.network.toModel
 import hu.attilakillin.startrekrelations.persistence.CharacterDao
+import hu.attilakillin.startrekrelations.persistence.toEntity
 import hu.attilakillin.startrekrelations.persistence.toModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -33,7 +32,27 @@ class CharacterRepository @Inject constructor(
         }
     }
 
-    fun loadDetails(uid: String) = flow<CharacterWithRelations> {
+    suspend fun addToFavorites(uid: String) = withContext(Dispatchers.IO) {
+        // TODO Handle network errors here
+        val characterEntity = try {
+            service.getCharacterDetails(uid).toModel().toEntity()
+        } catch (ex: Exception) {
+            TODO()
+        }
 
+        dao.insertCharacterAndRelations(characterEntity.character, characterEntity.relations)
+    }
+
+    suspend fun removeFromFavorites(uid: String) = withContext(Dispatchers.IO) {
+        dao.removeCharacter(uid)
+    }
+
+    suspend fun loadDetails(uid: String): Character = withContext(Dispatchers.IO) {
+        if (dao.characterExists(uid)) {
+            dao.loadCharacterDetails(uid).toModel()
+        } else {
+            // TODO Handle network errors
+            service.getCharacterDetails(uid).toModel()
+        }
     }
 }

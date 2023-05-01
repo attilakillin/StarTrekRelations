@@ -11,11 +11,14 @@ interface CharacterDao {
     @Query("SELECT * FROM character WHERE name LIKE '%' || :name || '%'")
     fun searchCharacters(name: String): List<Character>
 
+    @Query("SELECT EXISTS(SELECT * FROM character WHERE character.uid = :uid)")
+    fun characterExists(uid: String): Boolean
+
     @Insert
     fun insertCharacterAndRelations(character: Character, relations: List<Relation>)
 
-    @Delete
-    fun removeCharacter(character: Character)
+    @Query("DELETE FROM character WHERE character.uid = :uid")
+    fun removeCharacter(uid: String)
 
     @Transaction
     @Query("SELECT * FROM character WHERE character.uid = :uid")
