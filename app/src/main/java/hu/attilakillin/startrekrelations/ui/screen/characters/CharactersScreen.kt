@@ -1,6 +1,7 @@
 package hu.attilakillin.startrekrelations.ui.screen.characters
 
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -14,6 +15,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -32,13 +36,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import hu.attilakillin.startrekrelations.R
 import hu.attilakillin.startrekrelations.model.Character
+import hu.attilakillin.startrekrelations.model.PagedList
+import hu.attilakillin.startrekrelations.model.empty
+import hu.attilakillin.startrekrelations.ui.screen.PaddedText
 import java.util.concurrent.CancellationException
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -48,8 +53,8 @@ fun CharactersScreen(
     onDetailsClick: (String) -> Unit
 ) {
     /* Character list - the main state displayed on the screen. */
-    val favorites = charactersViewModel.favorites.observeAsState()
-    val characters = charactersViewModel.characters.observeAsState()
+    val favorites = charactersViewModel.favorites.observeAsState(listOf())
+    val characters = charactersViewModel.characters.observeAsState(PagedList.empty())
 
     /* Focus manager - to remove editor focus when clicking search button. */
     val focusManager = LocalFocusManager.current
@@ -79,6 +84,17 @@ fun CharactersScreen(
                 OutlinedTextField(
                     value = searchQuery.value,
                     onValueChange = { searchQuery.value = it },
+                    trailingIcon = {
+                        Icon(
+                            Icons.Filled.Clear,
+                            contentDescription = "Clear text",
+                            modifier = Modifier.clickable {
+                                searchQuery.value = ""
+                                focusManager.clearFocus()
+                                charactersViewModel.searchAll(searchQuery.value)
+                            }
+                        )
+                    },
                     modifier = Modifier
                         .weight(1.0f)
                         .height(56.dp)
@@ -104,14 +120,14 @@ fun CharactersScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxHeight()
             ) {
-                item {
+                item(key = "LABEL-FAVORITES") {
                     Text(text = "Favorites")
                 }
 
-                if (favorites.value.isNullOrEmpty()) {
-                    item { PaddedText(text = "No favorites yet...") }
+                if (favorites.value.isEmpty()) {
+                    item(key = "EMPTY-NO-FAV") { PaddedText(text = "No favorites yet...") }
                 } else {
-                    items(favorites.value ?: listOf()) {
+                    items(items = favorites.value, key = { "FAV-${it.uid}" }) {
                         CharacterCard(
                             character = it,
                             charactersViewModel = charactersViewModel,
@@ -122,14 +138,14 @@ fun CharactersScreen(
                     }
                 }
 
-                item {
+                item(key = "LABEL-RESULTS") {
                     Text(text = "Results")
                 }
 
-                if (characters.value?.content.isNullOrEmpty()) {
-                    item { PaddedText(text = "No results...") }
+                if (characters.value.content.isEmpty()) {
+                    item(key = "EMPTY-NO-RES") { PaddedText(text = "No results...") }
                 } else {
-                    items(characters.value?.content ?: listOf()) {
+                    items(items = characters.value.content, key = { it.uid }) {
                         CharacterCard(
                             character = it,
                             charactersViewModel = charactersViewModel,
@@ -183,9 +199,11 @@ fun CharacterCard(
                     onClick = { charactersViewModel.removeFromFavorites(character.uid) }
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.star_full),
+                        Icons.Filled.Star,
                         contentDescription = "Remove from favorites",
-                        modifier = Modifier.height(32.dp).width(32.dp)
+                        modifier = Modifier
+                            .height(32.dp)
+                            .width(32.dp)
                     )
                 }
             } else {
@@ -207,25 +225,12 @@ fun CharacterCard(
                     Icon(
                         painter = painterResource(id = R.drawable.star_empty),
                         contentDescription = "Add to favorites",
-                        modifier = Modifier.height(32.dp).width(32.dp)
+                        modifier = Modifier
+                            .height(32.dp)
+                            .width(32.dp)
                     )
                 }
             }
         }
-    }
-}
-
-@Composable
-fun PaddedText(
-    text: String
-) {
-    Row(
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(80.dp)
-    ) {
-        Text(text = text, fontStyle = FontStyle.Italic)
     }
 }
