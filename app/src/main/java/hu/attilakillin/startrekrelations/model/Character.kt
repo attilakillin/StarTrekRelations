@@ -13,5 +13,5 @@ data class Character(
 
     val relations: List<Relation> = listOf(),
 
-    val isFavorite: Boolean = false
+    var isFavorite: Boolean = false
 )

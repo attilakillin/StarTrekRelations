@@ -14,6 +14,9 @@ interface CharacterDao {
     @Query("SELECT EXISTS(SELECT * FROM character WHERE character.uid = :uid)")
     fun characterExists(uid: String): Boolean
 
+    @Query("SELECT uid FROM character")
+    fun loadCharacterUids(): List<String>
+
     @Insert
     fun insertCharacterAndRelations(character: Character, relations: List<Relation>)
 

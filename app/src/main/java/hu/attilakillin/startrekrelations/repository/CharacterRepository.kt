@@ -26,33 +26,44 @@ class CharacterRepository @Inject constructor(
         pageNumber: Int
     ): PagedList<Character> = withContext(Dispatchers.IO) {
         try {
-            service.searchCharacters(name = name, pageNumber = pageNumber).toModel()
+            val list = service.searchCharacters(name = name, pageNumber = pageNumber).toModel()
+            val favorites = dao.loadCharacterUids()
+
+            list.content.forEach { char ->
+                if (char.uid in favorites) {
+                    char.isFavorite = true
+                }
+            }
+
+            list
         } catch (ex: Exception) {
             PagedList(content = listOf(), pageNumber = 0, firstPage = true, lastPage = true)
         }
     }
 
-    suspend fun addToFavorites(uid: String) = withContext(Dispatchers.IO) {
-        // TODO Handle network errors here
-        val characterEntity = try {
-            service.getCharacterDetails(uid).toModel().toEntity()
+    suspend fun addToFavorites(uid: String): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val characterEntity = service.getCharacterDetails(uid).toModel().toEntity()
+            dao.insertCharacterAndRelations(characterEntity.character, characterEntity.relations)
+            true
         } catch (ex: Exception) {
-            TODO()
+            false
         }
-
-        dao.insertCharacterAndRelations(characterEntity.character, characterEntity.relations)
     }
 
     suspend fun removeFromFavorites(uid: String) = withContext(Dispatchers.IO) {
         dao.removeCharacter(uid)
     }
 
-    suspend fun loadDetails(uid: String): Character = withContext(Dispatchers.IO) {
+    suspend fun loadDetails(uid: String): Character? = withContext(Dispatchers.IO) {
         if (dao.characterExists(uid)) {
             dao.loadCharacterDetails(uid).toModel()
         } else {
-            // TODO Handle network errors
-            service.getCharacterDetails(uid).toModel()
+            try {
+                service.getCharacterDetails(uid).toModel()
+            } catch (ex: Exception) {
+                null
+            }
         }
     }
 }
