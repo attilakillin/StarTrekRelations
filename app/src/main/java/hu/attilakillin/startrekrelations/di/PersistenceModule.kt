@@ -19,6 +19,7 @@ object PersistenceModule {
     fun provideCharacterDatabase(application: Application): CharacterDatabase {
         return Room
             .databaseBuilder(application, CharacterDatabase::class.java, "database")
+            .fallbackToDestructiveMigration()
             .build()
     }
 

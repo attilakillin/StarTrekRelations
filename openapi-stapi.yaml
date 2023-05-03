@@ -1,0 +1,306 @@
+openapi: 3.0.3
+info:
+  title: STAPI
+  description:
+    STAPI, a Star Trek API - excerpt for the 3rd Android laboratory
+    of the Mobilszoftver-laboratórium subject
+  version: 0.1.4
+servers:
+  - url: https://stapi.co/api
+    description: STAPI over secure HTTPS protocol
+  - url: http://stapi.co/api
+    description: STAPI over plain HTTP protocol
+paths:
+  /v1/rest/character:
+    get:
+      tags:
+        - Character
+      description: Retrieval of a single character
+      operationId: v1GetCharacter
+      parameters:
+        - name: uid
+          in: query
+          description: Character unique ID
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CharacterFullResponse'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/rest/character/search:
+    post:
+      tags:
+        - Character
+      description: Searching characters
+      operationId: v1SearchCharacters
+      parameters:
+        - name: pageNumber
+          in: query
+          description: Zero-based page number
+          schema:
+            type: integer
+            format: int32
+        - name: pageSize
+          in: query
+          description: Page size
+          schema:
+            type: integer
+            format: int32
+        - name: sort
+          in: query
+          description: 'Sorting, serialized like this: fieldName,ASC;anotherFieldName,DESC'
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                name:
+                  type: string
+                  description: Character name
+                gender:
+                  type: string
+                  description: Character gender
+                deceased:
+                  type: boolean
+                  description: Whether it should be a deceased character
+                hologram:
+                  type: boolean
+                  description: Whether it should be a hologram
+                fictionalCharacter:
+                  type: boolean
+                  description: Whether it should be a fictional character (from universe
+                    point of view)
+                mirror:
+                  type: boolean
+                  description: Whether it should be a mirror universe character
+                alternateReality:
+                  type: boolean
+                  description: Whether it should be a alternate reality character
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CharacterBaseResponse'
+components:
+  schemas:
+    CharacterHeader:
+      required:
+        - name
+        - uid
+      type: object
+      properties:
+        uid:
+          type: string
+          description: Character unique ID
+        name:
+          type: string
+          description: Character name
+      description: Header character, embedded in other objects
+    CharacterBase:
+      required:
+        - name
+        - uid
+      type: object
+      properties:
+        uid:
+          type: string
+          description: Character unique ID
+        name:
+          type: string
+          description: Character name
+        gender:
+          type: string
+          description: Character gender
+        yearOfBirth:
+          type: integer
+          description: Year the character was born
+        yearOfDeath:
+          type: integer
+          description: Year the character died
+        height:
+          type: integer
+          description: Height in centimeters
+        weight:
+          type: integer
+          description: Weight in kilograms
+        serialNumber:
+          type: string
+          description: Serial number
+      description: Base character, returned in search results
+    CharacterFull:
+      required:
+        - name
+        - uid
+      type: object
+      properties:
+        uid:
+          type: string
+          description: Character unique ID
+        name:
+          type: string
+          description: Character name
+        gender:
+          type: string
+          description: Character gender
+        yearOfBirth:
+          type: integer
+          description: Year the character was born
+        yearOfDeath:
+          type: integer
+          description: Year the character died
+        height:
+          type: integer
+          description: Height in centimeters
+        weight:
+          type: integer
+          description: Weight in kilograms
+        characterSpecies:
+          type: array
+          description: Species this character belongs to
+          default:
+            - []
+          items:
+            $ref: '#/components/schemas/CharacterSpecies'
+        characterRelations:
+          type: array
+          description: Relations with other characters
+          default:
+            - []
+          items:
+            $ref: '#/components/schemas/CharacterRelation'
+      description: Full character, returned when queried using UID
+    CharacterBaseResponse:
+      type: object
+      properties:
+        page:
+          $ref: '#/components/schemas/ResponsePage'
+        sort:
+          $ref: '#/components/schemas/ResponseSort'
+        characters:
+          type: array
+          description: List of characters matching given criteria
+          default:
+            - []
+          items:
+            $ref: '#/components/schemas/CharacterBase'
+      description: Response object for characters search
+    CharacterFullResponse:
+      type: object
+      properties:
+        character:
+          $ref: '#/components/schemas/CharacterFull'
+      description: Response object for single character query
+    CharacterRelation:
+      type: object
+      properties:
+        type:
+          type: string
+          description: Relation type
+        source:
+          $ref: '#/components/schemas/CharacterHeader'
+        target:
+          $ref: '#/components/schemas/CharacterHeader'
+      description: Relation between characters
+    CharacterSpecies:
+      type: object
+      properties:
+        uid:
+          type: string
+          description: Entity unique ID
+        name:
+          type: string
+          description: Species name
+        numerator:
+          type: integer
+          description: Numerator
+        denominator:
+          type: integer
+          description: Denominator
+      description: Species a character belongs to
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+      description: Error object
+    ResponsePage:
+      type: object
+      properties:
+        pageNumber:
+          type: integer
+          description: Zero-based page number
+          format: int32
+        pageSize:
+          type: integer
+          description: Page size
+          format: int32
+        numberOfElements:
+          type: integer
+          description: Number of elements in page
+          format: int32
+        totalElements:
+          type: integer
+          description: Total elements found
+          format: int32
+        totalPages:
+          type: integer
+          description: Total pages found
+          format: int32
+        firstPage:
+          type: boolean
+          description: Whether it is the first page
+        lastPage:
+          type: boolean
+          description: Whether it is the last page
+      description: Object describing response page
+    ResponseSort:
+      type: object
+      properties:
+        clauses:
+          type: array
+          description: List of response sort rules
+          default:
+            - []
+          items:
+            $ref: '#/components/schemas/ResponseSortClause'
+      description: Response sort
+    ResponseSortClause:
+      required:
+        - clauseOrder
+        - direction
+        - name
+      type: object
+      properties:
+        name:
+          type: string
+          description: Field name results are sorted by
+        direction:
+          $ref: '#/components/schemas/ResponseSortDirection'
+        clauseOrder:
+          type: integer
+          description: Order in which this clause was applied
+      description: Single response sort clause
+    ResponseSortDirection:
+      type: string
+      description: Sort direction
+      enum:
+        - ASC
+        - DESC

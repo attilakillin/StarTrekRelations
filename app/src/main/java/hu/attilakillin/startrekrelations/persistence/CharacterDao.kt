@@ -1,18 +1,29 @@
 package hu.attilakillin.startrekrelations.persistence
 
 import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
-import hu.attilakillin.startrekrelations.model.Character
-import hu.attilakillin.startrekrelations.model.CharacterWithRelations
-import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CharacterDao {
-    @Query("SELECT * FROM character")
-    fun loadAllCharacters(): Flow<List<Character>>
+    @Query("SELECT * FROM character WHERE name LIKE '%' || :name || '%'")
+    fun searchCharacters(name: String): List<Character>
+
+    @Query("SELECT EXISTS(SELECT * FROM character WHERE character.uid = :uid)")
+    fun characterExists(uid: String): Boolean
+
+    @Query("SELECT uid FROM character")
+    fun loadCharacterUids(): List<String>
+
+    @Insert
+    fun insertCharacterAndRelations(character: Character, relations: List<Relation>)
+
+    @Query("DELETE FROM character WHERE character.uid = :uid")
+    fun removeCharacter(uid: String)
 
     @Transaction
     @Query("SELECT * FROM character WHERE character.uid = :uid")
-    fun loadCharacterDetails(uid: String): Flow<CharacterWithRelations>
+    fun loadCharacterDetails(uid: String): CharacterWithRelations
 }
