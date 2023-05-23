@@ -25,6 +25,10 @@ class CharactersViewModel @Inject constructor(
 
     /* Search both the favorites and the general characters list. */
     fun searchAll(query: String = "") {
+        if (query == "xxtestcrashxx") {
+            throw RuntimeException("XX Testcrash XX")
+        }
+
         searchFavorites(query)
         searchCharacters(query)
     }
